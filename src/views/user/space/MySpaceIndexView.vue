@@ -48,9 +48,9 @@
       </div>
 
       <div class="col-9">
-        <div class="card" style="margin-top: 20px;">
-          <div class="row" style="margin-left: 20px; margin-right: 20px;">
-            <ul class="nav nav-tabs">
+        <div class="card" style="margin-top: 20px; margin-right: 20px;">
+          <div class="row" style="margin-left: 20px;">
+            <ul class="nav nav-tabs" style="margin-top: 20px;">
               <li class="nav-item">
                 <router-link :class="route_name == 'user_space_publish' ? 'nav-link active' : ' nav-link'" aria-current="page" :to="{name:'user_space_publish'}">我的发布</router-link>
               </li>
@@ -65,7 +65,9 @@
               </li>
             </ul>
           </div>
-          <router-view></router-view>
+          <div class="row" style="margin-left: 20px; margin-right: 20px;">
+            <router-view></router-view>
+          </div>
         </div>
       </div>
 

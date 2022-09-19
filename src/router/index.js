@@ -18,7 +18,7 @@ const routes = [
     name: "home",
     redirect: "/record",
     meta: {
-      requestAuth: true,
+      requestAuth: false,
     }
   },
   {
@@ -26,7 +26,7 @@ const routes = [
     name: "record_index",
     component: RecordIndexView,
     meta: {
-      requestAuth: false,
+      requestAuth: true,
     }
   },
   {
@@ -34,7 +34,7 @@ const routes = [
     name: "map_index",
     component: MapIndexView,
     meta: {
-      requestAuth: false,
+      requestAuth: true,
     }
   },
   {
@@ -58,11 +58,17 @@ const routes = [
         path: "/user/myspace/publish",
         name: "user_space_publish",
         component:  PublishView,
+        meta: {
+          requestAuth: true,
+        }
       },
       {
         path: "/user/myspace/notification",
         name: "user_space_notification",
         component: NotificationView,
+        meta: {
+          requestAuth: true,
+        }
       }
     ]
   },
@@ -115,6 +121,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   console.log("from: " + from.name)
   console.log("to: " + to.name)
+
   if (to.meta.requestAuth && !store.state.user.is_login) {
     localStorage.setItem("toPageName", to.name);
     localStorage.setItem("toPageParam",JSON.stringify(to.params));

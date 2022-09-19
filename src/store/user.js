@@ -30,6 +30,8 @@ export default {
             state.id = "";
             state.username = "";
             state.photo = "";
+            state.email = "";
+            state.phone = "";
             state.token = "";
             state.is_login = false;
         },
