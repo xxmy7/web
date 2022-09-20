@@ -10,15 +10,16 @@ import "bootstrap/dist/js/bootstrap"
 import "bootstrap-icons/font/bootstrap-icons.css"
 import "bootstrap-fileinput/css/fileinput.min.css"
 import "bootstrap-fileinput/js/fileinput.min"
+import "bootstrap-fileinput/js/locales/zh"
 
 export default {
   components: {
     NavBar
-  }
+  },
 }
 </script>
 
 <style>
-body{
+body {
 }
 </style>

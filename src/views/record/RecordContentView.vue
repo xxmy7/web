@@ -14,13 +14,13 @@
           </span>
           <div v-if="parseInt(record.kind) === 0" style="float: right">
             <div class="row label round"
-                   style="font-size:18px; background-color: #f54b4b;">寻物启示
+                 style="font-size:18px; background-color: #f54b4b;">寻物启示
             </div>
             <div class="row" style="font-size: 14px;margin:5px 0 0 0;font-weight: bold">ID#F176{{ record.id }}</div>
           </div>
           <div v-else-if="parseInt(record.kind) === 1" style="float: right">
             <div class="row label round"
-                   style="font-size:18px; background-color: #84ec9c;">失物招领
+                 style="font-size:18px; background-color: #84ec9c;">失物招领
             </div>
             <div class="row" style="font-size: 14px;margin:5px 0 0 0;font-weight: bold">ID#F176{{ record.id }}</div>
           </div>
@@ -40,21 +40,18 @@
         <hr style="margin-top: 10px;">
         <div class="photo-group">
           <div class="row" style="margin-bottom: 20px">
-            <div class="col-2" style="margin:0"><img :src="record.images" style="width: 100%; "></div>
-            <div class="col-2" style="margin:0"><img :src="record.images" style="width: 100%; "></div>
-            <div class="col-2" style="margin:0"><img :src="record.images" style="width: 100%; "></div>
-            <div class="col-2" style="margin:0"><img :src="record.images" style="width: 100%; "></div>
-            <div class="col-2" style="margin:0"><img :src="record.images" style="width: 100%; "></div>
-            <div class="col-2" style="margin:0"><img :src="record.images" style="width: 100%; "></div>
+            <div v-for="(img, index) in record.images" :key="index" class="col-2" style="margin:0">
+              <img :src="img" style="width: 100%; ">
+            </div>
           </div>
         </div>
         <hr>
         <p class="card-text ">
-          <span style="color: #999999; font-weight: 700;">物品：</span>
+          <span style="color: #999999; font-weight: 700;">{{ parseInt(record.kind) === 0 ? "丢失物品: " : "物品: " }}</span>
           {{ record.category }}
         </p>
         <p class="card-text ">
-          <span style="color: #999999; font-weight: 700;">地点：</span>
+          <span style="color: #999999; font-weight: 700;">{{ parseInt(record.kind) === 0 ? "丢失地点: " : "找到地点: " }}</span>
           {{ record.location }}
         </p>
         <p class="card-text ">
@@ -89,24 +86,105 @@
             class="btn btn-outline-primary" style="margin-right: 20px">确认已认领
         </button>
 
-        <button v-if="parseInt($store.state.user.id) === parseInt(record.userId) && parseInt(record.status) === 1" type="button"
-                class="btn btn-outline-secondary" style="margin-right: 20px">修改
+        <button v-if="parseInt($store.state.user.id) === parseInt(record.userId) && parseInt(record.status) === 1"
+                type="button"
+                class="btn btn-outline-secondary" style="margin-right: 20px" data-bs-toggle="modal"
+                :data-bs-target="'#record-content-updateModal-'+record.id" @click="open_update_modal()">修改
         </button>
-        <button v-else-if="Boolean(parseInt($store.state.user.id) === parseInt(record.userId) && parseInt(record.status) === 3)" type="button"
-                class="btn btn-outline-secondary" disabled style="margin-right: 20px">修改
+        <button
+            v-else-if="Boolean(parseInt($store.state.user.id) === parseInt(record.userId) && parseInt(record.status) === 3)"
+            type="button"
+            class="btn btn-outline-secondary" disabled style="margin-right: 20px">修改
         </button>
+        <!-- 发布内容Modal -->
+        <div class="modal fade" :id="'record-content-updateModal-'+record.id" data-bs-backdrop="static"
+             data-bs-keyboard="false" tabindex="-1">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">发布信息</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="close_update_record_modal()"></button>
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div class="mb-3">
+                    <label class="form-label">发布类型</label><br>
+                    <div class="form-check form-check-inline">
+                      <input v-model="recordupdate.type" value="0" class="form-check-input" type="radio"
+                             name="flexRadioDefault" id="flexRadioDefault1" checked>
+                      <label class="form-check-label" for="flexRadioDefault1">
+                        寻物启事
+                      </label>
+                    </div>
+                    <div class="form-check form-check-inline" style="margin-left: 20px">
+                      <input v-model="recordupdate.type" value="1" class="form-check-input" type="radio"
+                             name="flexRadioDefault" id="flexRadioDefault2">
+                      <label class="form-check-label" for="flexRadioDefault2">
+                        失物招领
+                      </label>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="add-record-title" class="form-label">标题</label>
+                    <input v-model="recordupdate.title" type="text" class="form-control" id="add-record-title"
+                           placeholder="请输入标题">
+                  </div>
+                  <div class="mb-3">
+                    <label for="add-record-category" class="form-label">物品</label>
+                    <input v-model="recordupdate.category" type="text" class="form-control" id="add-record-category"
+                           placeholder="请输入物品名称">
+                  </div>
+                  <div class="mb-3">
+                    <label v-if="recordupdate.type=== 0" for="add-record-location"
+                           class="form-label">丢失地点</label>
+                    <label v-else for="add-record-location" class="form-label">找到地点</label>
+                    <input v-model="recordupdate.location" type="text" class="form-control" id="add-record-location"
+                           placeholder="请输入地点">
+                  </div>
+                  <div class="mb-3">
+                    <label v-if="recordupdate.type===0" for="add-record-time" class="form-label">丢失时间</label>
+                    <label v-else for="add-record-time" class="form-label">找到时间</label>
+                    <input v-model="recordupdate.time" type="text" class="form-control" id="add-record-time"
+                           placeholder="请输入时间">
+                  </div>
+                  <div class="mb-3">
+                    <label for="add-bot-description" class="form-label">内容描述</label>
+                    <textarea v-model="recordupdate.description" class="form-control" id="add-bot-description"
+                              rows="3"
+                              placeholder="请输入描述"></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">上传图片</label>
+                    <div class="file-loading">
+                      <input id="file" name="file" multiple type="file">
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer">
+                <div class="error-message" style="color: red;">{{ recordupdate.error_message }}</div>
+                <button type="button" class="btn btn-primary" @click="update_record">创建</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="close_update_record_modal()">取消
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
         <button v-if="parseInt($store.state.user.id) === parseInt(record.userId)" type="button"
                 class="btn btn-outline-danger" data-bs-toggle="modal"
                 :data-bs-target="'#record-content-deleteModal-'+record.id">删除
         </button>
 
-        <!-- Modal -->
-        <div class="modal fade" :id="'record-content-deleteModal-'+record.id" data-bs-backdrop="static" data-bs-keyboard="false"
+        <!-- 删除的提示Modal -->
+        <div class="modal fade" :id="'record-content-deleteModal-'+record.id" data-bs-backdrop="static"
+             data-bs-keyboard="false"
              tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>
+                <h5 class="modal-title" id="staticBackdropLabel">删除发布</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
@@ -116,7 +194,7 @@
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-bs-dismiss="modal">返回</button>
-                <button type="button" class="btn btn-primary" @click="deleteRecord(record.id)">确认</button>
+                <button type="button" class="btn btn-danger" @click="deleteRecord(record.id)">确认</button>
               </div>
             </div>
           </div>
@@ -124,7 +202,7 @@
       </div>
     </ContentField>
 
-<!--    评论区-->
+    <!--    评论区-->
     <ContentField>
       <h3 style="font-weight: normal; margin: 10px 0 30px 0;">0 评论</h3>
       <div class="row">
@@ -152,12 +230,13 @@
 
 <script>
 import ContentField from "@/components/ContentField";
-import {useStore} from "vuex";
 import $ from "jquery";
-import {ref} from "vue";
+import {useStore} from "vuex";
+import {reactive, ref} from "vue";
 import {useRoute} from "vue-router";
 import {Modal} from 'bootstrap/dist/js/bootstrap';
 import router from '@/router';
+
 
 export default {
   components: {
@@ -169,6 +248,20 @@ export default {
     const store = useStore();
     let record = ref('');
 
+    const route = useRoute();
+    const path = route.path;
+
+    const recordupdate = reactive({
+      type: 0,
+      title: "",
+      category: "",
+      time: "",
+      location: "",
+      description: "",
+      error_message: "",
+      images: [],
+    });
+
     const refresh_record_content = recordId => {
       $.ajax({
         url: `http://127.0.0.1:3000/lostfound/${recordId}`,
@@ -178,6 +271,7 @@ export default {
         },
         success(resp) {
           record.value = resp.data;
+          record.value.images = JSON.parse(record.value.images);
         },
         error(resp) {
           console.log(resp);
@@ -185,12 +279,10 @@ export default {
       })
     }
 
-    const route = useRoute();
-    const path = route.path;
 
     refresh_record_content(parseInt(path.split('/')[path.split('/').length - 1]));
 
-    const deleteRecord = (id)=>{
+    const deleteRecord = (id) => {
       $.ajax({
         url: "http://127.0.0.1:3000/lostfound",
         type: "put",
@@ -201,25 +293,102 @@ export default {
           id: id,
           recordStatus: 0,
         }),
-        contentType:"application/json; charset=UTF-8",
+        contentType: "application/json; charset=UTF-8",
         "success": function (resp) {
           if (resp.code === "0") {
             Modal.getInstance('#record-content-deleteModal-' + id).hide();
             router.push({
-              name:"record_index"
+              name: "record_index"
             });
-          } else{
+          } else {
             console.log(resp)
           }
         }
       });
     }
+
+    const open_update_modal = () => {
+      console.log("打开了")
+      // 属性的重新刷新
+      recordupdate.type = record.value.kind;
+      recordupdate.title = record.value.title;
+      recordupdate.category = record.value.category;
+      recordupdate.time = record.value.happenTime;
+      recordupdate.location = record.value.location;
+      recordupdate.description = record.value.about;
+      recordupdate.images = record.value.images;
+
+      let length = recordupdate.images.length;
+      let config = [];
+      for(let i = 0; i < length; i++){
+        config.push({
+          url:'http://127.0.0.1:3000/files/remove',// 预展示图片的删除调取路径
+          key: recordupdate.images[i].split('/')[recordupdate.images[i].split('/').length - 1],
+          extra: { //调用删除路径所传参数
+            id: record.value.id,
+            url: recordupdate.images[i],
+          },
+          caption: recordupdate.images[i].split('/')[recordupdate.images[i].split('/').length - 1],
+        })
+      }
+
+      // 上传文件的插件
+      $('#file').fileinput({
+        initialPreviewAsData: true,
+        initialPreviewFileType: 'image',
+        initialPreview: recordupdate.images,
+        enctype: 'multipart/form-data',
+        validateInitialCount: true,
+        initialPreviewConfig: config,
+        // previewFileIcon: "<i class='glyphicon glyphicon-king'></i>",
+
+        // deleteUrl: 'http://127.0.0.1:3000/files/remove',
+        overwriteInitial: false,
+        language: 'zh',     //设置语言
+        dropZoneEnabled: true,      //是否显示拖拽区域
+        dropZoneTitle: "可以将图片拖放到这里",    //拖拽区域显示文字
+        uploadUrl: 'http://127.0.0.1:3000/files/upload',  //上传路径
+        allowedFileExtensions: ['jpg', 'png', 'gif', 'jpeg'],   //指定上传文件类型
+        maxFileSize: 204800,   //上传文件最大值，单位kb
+        uploadAsync: true,  //异步上传
+        maxFileCount: 5,    //上传文件最大个数。
+        showClose: false,    //右上角的X
+        // fileActionSettings: {
+        //   showZoom: false,
+        // },
+        ajaxSettings: {
+          headers: {
+            Authorization: "Bearer " + store.state.user.token
+          }
+        },
+      }).on("fileuploaded", function (event, data) { //异步上传成功后回调
+        let url = data.response.data;
+        store.commit("updateImages", url);
+        console.log(store.state.file.images);
+        console.log(JSON.stringify(store.state.file.images));
+      }).on('filepredelete', function (event, key) {  //就是在删除原图片之前触发，而新选择的图片不会触发。能满足我们的要求。
+        console.log('删除前 key = ' + key);
+      }).on('filedeleted', function(event, key){
+        console.log('删除后 key = ' + key);
+        refresh_record_content(parseInt(path.split('/')[path.split('/').length - 1]));
+      });
+    }
+
+    const close_update_record_modal = () => {
+      store.commit("clearImages");
+      refresh_record_content(parseInt(path.split('/')[path.split('/').length - 1]));
+    }
+
     return {
       record,
       refresh_record_content,
       deleteRecord,
+      recordupdate,
+      open_update_modal,
+      close_update_record_modal,
     }
-  }
+  },
+
 
 }
 </script>

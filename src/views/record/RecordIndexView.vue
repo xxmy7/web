@@ -7,17 +7,17 @@
             <li class="active nav-item">
               <a href="#"
                  :class="searchType === 0 ? 'user-myspace-base-subtitle nav-link active':'user-myspace-base-subtitle nav-link'"
-                 @click="updateSearchType(0)">寻物启示</a>
+                 @click="update_search_type(0)">寻物启示</a>
             </li>
             <li class="nav-item">
               <a href="#"
                  :class="searchType === 1 ? 'user-myspace-base-subtitle nav-link active':'user-myspace-base-subtitle nav-link'"
-                 @click="updateSearchType(1)">失物招领</a>
+                 @click="update_search_type(1)">失物招领</a>
             </li>
             <li class="nav-item">
               <a href="#"
                  :class="searchType === -1 ? 'user-myspace-base-subtitle nav-link active':'user-myspace-base-subtitle nav-link'"
-                 @click="updateSearchType(-1)">我的发布</a>
+                 @click="update_search_type(-1)">我的发布</a>
             </li>
           </ul>
         </div>
@@ -28,10 +28,11 @@
           <i class="bi bi-check" v-if="searchFinish"></i>
           <span class="btn btn-success activity_status" style="margin-left: 12px" @click="click_searchWork()">进行中</span>
           <i class="bi bi-check" v-if="searchWork"></i>
+
+          <!--          搜索框-->
           <a class="" data-bs-toggle="collapse" href="#collapseExample" style="margin-left: 15px">
             <i class="bi bi-arrow-bar-down"></i> 搜索框
           </a>
-
           <div class="row collapse" id="collapseExample" style="margin-top: 10px;">
             <div class="row" style="margin-top: 10px">
               <div class="col-5">
@@ -60,7 +61,7 @@
             <div class="row" style="margin-top: 10px">
               <div class="col-5">
                 <button class="btn btn-sm btn-secondary" style="width: 30%" @click="handle_search_btn()">搜索</button>
-                <button class="btn btn-sm btn-dark" style="float:right; width: 30%" @click="emptySearchInput()">清空
+                <button class="btn btn-sm btn-dark" style="float:right; width: 30%" @click="empty_search_input()">清空
                 </button>
               </div>
             </div>
@@ -77,8 +78,84 @@
               </a>
             </div>
             <div class="col-11">
-              <div class="add-news-text-field">
+              <div class="add-news-text-field" data-bs-toggle="modal" data-bs-target="#add-record">
                 {{ $store.state.user.username }},有什么新鲜事想告诉大家!
+              </div>
+
+              <!-- 发布内容Modal -->
+              <div class="modal fade" id="add-record" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="exampleModalLabel">发布信息</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                              @click="close_add_record_modal()"></button>
+                    </div>
+                    <div class="modal-body">
+                      <form>
+                        <div class="mb-3">
+                          <label class="form-label">发布类型</label><br>
+                          <div class="form-check form-check-inline">
+                            <input v-model="recordadd.type" value="lost" class="form-check-input" type="radio"
+                                   name="flexRadioDefault" id="flexRadioDefault1" checked>
+                            <label class="form-check-label" for="flexRadioDefault1">
+                              寻物启事
+                            </label>
+                          </div>
+                          <div class="form-check form-check-inline" style="margin-left: 20px">
+                            <input v-model="recordadd.type" value="found" class="form-check-input" type="radio"
+                                   name="flexRadioDefault" id="flexRadioDefault2">
+                            <label class="form-check-label" for="flexRadioDefault2">
+                              失物招领
+                            </label>
+                          </div>
+                        </div>
+                        <div class="mb-3">
+                          <label for="add-record-title" class="form-label">标题</label>
+                          <input v-model="recordadd.title" type="text" class="form-control" id="add-record-title"
+                                 placeholder="请输入标题">
+                        </div>
+                        <div class="mb-3">
+                          <label for="add-record-category" class="form-label">物品</label>
+                          <input v-model="recordadd.category" type="text" class="form-control" id="add-record-category"
+                                 placeholder="请输入物品名称">
+                        </div>
+                        <div class="mb-3">
+                          <label v-if="recordadd.type==='lost'" for="add-record-location"
+                                 class="form-label">丢失地点</label>
+                          <label v-else for="add-record-location" class="form-label">找到地点</label>
+                          <input v-model="recordadd.location" type="text" class="form-control" id="add-record-location"
+                                 placeholder="请输入地点">
+                        </div>
+                        <div class="mb-3">
+                          <label v-if="recordadd.type==='lost'" for="add-record-time" class="form-label">丢失时间</label>
+                          <label v-else for="add-record-time" class="form-label">找到时间</label>
+                          <input v-model="recordadd.time" type="text" class="form-control" id="add-record-time"
+                                 placeholder="请输入时间">
+                        </div>
+                        <div class="mb-3">
+                          <label for="add-bot-description" class="form-label">内容描述</label>
+                          <textarea v-model="recordadd.description" class="form-control" id="add-bot-description"
+                                    rows="3"
+                                    placeholder="请输入描述"></textarea>
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label">上传图片</label>
+                          <div class="file-loading">
+                            <input id="file" name="file" multiple type="file">
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+                      <div class="error-message" style="color: red;">{{ recordadd.error_message }}</div>
+                      <button type="button" class="btn btn-primary" @click="add_record">创建</button>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                              @click="close_add_record_modal()">取消
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -92,14 +169,14 @@
          style="width: 50vw; margin-bottom: 4vh">
       <div class="card-header bg-white" style="margin-bottom: 1px">
         <div class="row">
-            <div class="col-6 record-type-lost" v-if="parseInt(record.kind) === 0">
-              寻物启示
-              <span>ID#F176{{ record.id }}</span>
-            </div>
-            <div class="col-6 record-type-find" v-else-if="parseInt(record.kind) === 1">
-              失物招领
-              <span>ID#L324{{ record.id }}</span>
-            </div>
+          <div class="col-6 record-type-lost" v-if="parseInt(record.kind) === 0">
+            寻物启示
+            <span>ID#F176{{ record.id }}</span>
+          </div>
+          <div class="col-6 record-type-find" v-else-if="parseInt(record.kind) === 1">
+            失物招领
+            <span>ID#L324{{ record.id }}</span>
+          </div>
 
           <div class="col-6 record-title">
             <router-link :to="{name:'record_content', params:{recordId:record.id}}" class="detail">
@@ -121,7 +198,7 @@
       <div class="row">
         <div class="col-4">
           <div class="card-body" style="text-align: center">
-            <img :src="record.images" alt="..." style="width: 200px; height:200px">
+            <img :src="record.images[0]" style="width: 200px; height:200px">
           </div>
         </div>
         <div class="col-1"></div>
@@ -150,6 +227,10 @@
         </div>
       </div>
     </div>
+
+
+
+<!--    返回最上面链接-->
     <a href="#top" class="back-to-top" style="position:fixed;right:2vw;bottom:2vh;">
       <i class="bi bi-arrow-bar-up" style="font-size: 5vh"></i>
     </a>
@@ -179,6 +260,8 @@
 import {ref} from "vue";
 import {useStore} from "vuex";
 import $ from "jquery";
+import {reactive} from "vue";
+import {Modal} from "bootstrap";
 
 export default {
   components: {},
@@ -196,6 +279,17 @@ export default {
     let searchWork = ref(true);
     let searchType = ref(0);
 
+
+    const recordadd = reactive({
+      type: "lost",
+      title: "",
+      category: "",
+      time: "",
+      location: "",
+      description: "",
+      error_message: "",
+    });
+
     const refresh_records = () => {
       $.ajax({
         url: "http://127.0.0.1:3000/lostfound/getlist",
@@ -208,7 +302,11 @@ export default {
           state: 0, //进行的和已完成的都找
         },
         "success": function (resp) {
-          records.value = resp.data.records;
+          let tmp = JSON.parse(JSON.stringify(resp.data.records));
+          for (let i = 0; i < tmp.length; i++) {
+            tmp[i].images = JSON.parse(tmp[i].images);
+          }
+          records.value = tmp;
           total_records = parseInt(resp.data.records_count);
         }
       });
@@ -239,7 +337,7 @@ export default {
         searchKind = -1;
       }
 
-      if(searchType.value === -1) {
+      if (searchType.value === -1) {
         $.ajax({
           url: "http://127.0.0.1:3000/lostfound/getlist",
           data: {
@@ -256,7 +354,11 @@ export default {
             Authorization: "Bearer " + store.state.user.token,
           },
           success(resp) {
-            records.value = resp.data.records;
+            let tmp = JSON.parse(JSON.stringify(resp.data.records));
+            for (let i = 0; i < tmp.length; i++) {
+              tmp[i].images = JSON.parse(tmp[i].images);
+            }
+            records.value = tmp;
             total_records = parseInt(resp.data.records_count);
             update_pages();
           },
@@ -264,8 +366,7 @@ export default {
             console.log(resp);
           }
         })
-      }
-      else{
+      } else {
         $.ajax({
           url: "http://127.0.0.1:3000/lostfound/getlist",
           data: {
@@ -281,7 +382,11 @@ export default {
             Authorization: "Bearer " + store.state.user.token,
           },
           success(resp) {
-            records.value = resp.data.records;
+            let tmp = JSON.parse(JSON.stringify(resp.data.records));
+            for (let i = 0; i < tmp.length; i++) {
+              tmp[i].images = JSON.parse(tmp[i].images);
+            }
+            records.value = tmp;
             total_records = parseInt(resp.data.records_count);
             update_pages();
           },
@@ -310,7 +415,7 @@ export default {
     pull_page(current_page);
 
     //清空搜索框的输入
-    const emptySearchInput = () => {
+    const empty_search_input = () => {
       title.value = '';
       category.value = '';
       location.value = '';
@@ -328,7 +433,7 @@ export default {
       pull_page(current_page);
     }
 
-    const updateSearchType = (type) => {
+    const update_search_type = (type) => {
       searchType.value = type;
       current_page = 1;
       pull_page(current_page);
@@ -339,6 +444,48 @@ export default {
       pull_page(current_page);
     }
 
+    const close_add_record_modal = () => {
+      $(".fileinput-remove-button").click();  //模拟移除按钮单击事件
+      store.commit("clearImages");
+    }
+
+    const add_record = () => {
+      $.ajax({
+        url: "http://127.0.0.1:3000/lostfound/add",
+        type: "post",
+        headers: {
+          authorization: "Bearer " + store.state.user.token,
+        },
+        contentType: "application/json; charset=UTF-8",
+        data: JSON.stringify({
+          userId: store.state.user.id,
+          kind: recordadd.type === 'lost' ? 0 : 1,
+          title: recordadd.title,
+          about: recordadd.description,
+          location: recordadd.location,
+          category: recordadd.category,
+          happenTime: recordadd.time,
+          images: JSON.stringify(store.state.file.images)
+        }),
+        "success": function (resp) {
+          if (resp.code === "0") {
+            recordadd.type = "lost";
+            recordadd.title = "";
+            recordadd.category = "";
+            recordadd.time = "";
+            recordadd.location = "";
+            recordadd.description = "";
+            recordadd.error_message = "";
+            close_add_record_modal();
+            refresh_records();
+            Modal.getInstance("#add-record").hide();
+          } else {
+            recordadd.error_message = resp.msg;
+          }
+        }
+      });
+    }
+
     return {
       records,
       refresh_records,
@@ -347,15 +494,46 @@ export default {
       title,
       category,
       location,
-      emptySearchInput,
+      empty_search_input,
       searchFinish,
       searchWork,
       click_searchFinish,
       click_searchWork,
       searchType,
-      updateSearchType,
+      update_search_type,
       handle_search_btn,
+      close_add_record_modal,
+      recordadd,
+      add_record,
     }
+  },
+
+  mounted() {
+    const store = useStore();
+    $('#file').fileinput({
+      language: 'zh',     //设置语言
+      dropZoneEnabled: true,      //是否显示拖拽区域
+      dropZoneTitle: "可以将图片拖放到这里",    //拖拽区域显示文字
+      uploadUrl: 'http://127.0.0.1:3000/files/upload',  //上传路径
+      allowedFileExtensions: ['jpg', 'png', 'gif', 'jpeg'],   //指定上传文件类型
+      maxFileSize: 204800,   //上传文件最大值，单位kb
+      uploadAsync: true,  //异步上传
+      maxFileCount: 5,    //上传文件最大个数。
+      showClose: false,    //右上角的X
+      fileActionSettings: {
+        showZoom: false,
+      },
+      ajaxSettings: {
+        headers: {
+          Authorization: "Bearer " + store.state.user.token
+        }
+      },
+    }).on("fileuploaded", function (event, data) { //异步上传成功后回调
+      let url = data.response.data;
+      store.commit("updateImages", url);
+      console.log(store.state.file.images);
+      console.log(JSON.stringify(store.state.file.images));
+    });
   }
 }
 </script>
