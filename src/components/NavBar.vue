@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="top" >
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="top">
     <div class="container">
       <router-link class="navbar-brand" :to="{ name: 'home' }">Lost and Found</router-link>
       <div class="collapse navbar-collapse" id="navbarText">
@@ -16,6 +16,16 @@
           </li>
         </ul>
         <ul class="navbar-nav" v-if="$store.state.user.is_login">
+          <li class="nav-item" style="margin-right: 20px">
+            <div class="row">
+              <i class="bi bi-bell position-relative" style="color: white; font-size: 20px; line-height: 40px; margin: 0;padding: 0">
+              <div class="position-absolute start-100 translate-middle badge bg-danger rounded-pill" style="top: 10px;font-size: 2px;">
+                  99+
+                <span class="visually-hidden">unread messages</span>
+              </div>
+              </i>
+            </div>
+          </li>
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                data-bs-toggle="dropdown" aria-expanded="false">

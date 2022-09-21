@@ -103,7 +103,8 @@
             <div class="modal-content">
               <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalLabel">发布信息</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="close_update_record_modal()"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                        @click="close_update_record_modal()"></button>
               </div>
               <div class="modal-body">
                 <form>
@@ -163,8 +164,9 @@
               </div>
               <div class="modal-footer">
                 <div class="error-message" style="color: red;">{{ recordupdate.error_message }}</div>
-                <button type="button" class="btn btn-primary" @click="update_record">创建</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="close_update_record_modal()">取消
+                <button type="button" class="btn btn-primary" @click="update_record">修改</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                        @click="close_update_record_modal()">取消
                 </button>
               </div>
             </div>
@@ -283,6 +285,7 @@ export default {
     refresh_record_content(parseInt(path.split('/')[path.split('/').length - 1]));
 
     const deleteRecord = (id) => {
+      //实际是更新状态为删除
       $.ajax({
         url: "http://127.0.0.1:3000/lostfound",
         type: "put",
@@ -320,9 +323,9 @@ export default {
 
       let length = recordupdate.images.length;
       let config = [];
-      for(let i = 0; i < length; i++){
+      for (let i = 0; i < length; i++) {
         config.push({
-          url:'http://127.0.0.1:3000/files/remove',// 预展示图片的删除调取路径
+          url: 'http://127.0.0.1:3000/files/remove',// 预展示图片的删除调取路径
           key: recordupdate.images[i].split('/')[recordupdate.images[i].split('/').length - 1],
           extra: { //调用删除路径所传参数
             id: record.value.id,
@@ -332,6 +335,7 @@ export default {
         })
       }
 
+      let List = new Array();//定义一个全局变量去接受文件名和id
       // 上传文件的插件
       $('#file').fileinput({
         initialPreviewAsData: true,
@@ -342,7 +346,6 @@ export default {
         initialPreviewConfig: config,
         // previewFileIcon: "<i class='glyphicon glyphicon-king'></i>",
 
-        // deleteUrl: 'http://127.0.0.1:3000/files/remove',
         overwriteInitial: false,
         language: 'zh',     //设置语言
         dropZoneEnabled: true,      //是否显示拖拽区域
@@ -353,22 +356,34 @@ export default {
         uploadAsync: true,  //异步上传
         maxFileCount: 5,    //上传文件最大个数。
         showClose: false,    //右上角的X
-        // fileActionSettings: {
-        //   showZoom: false,
-        // },
+        fileActionSettings: {
+          showZoom: false,
+        },
         ajaxSettings: {
           headers: {
             Authorization: "Bearer " + store.state.user.token
           }
         },
-      }).on("fileuploaded", function (event, data) { //异步上传成功后回调
+      }).on("fileuploaded", function (event, data, previewId) { //异步上传成功后回调
         let url = data.response.data;
+        List.push({ FileName: url, KeyID: previewId })
         store.commit("updateImages", url);
         console.log(store.state.file.images);
         console.log(JSON.stringify(store.state.file.images));
+      }).on('filesuccessremove', function (event, id) { //新上传的文件的删除
+        //在移除事件里取出所需数据，并执行相应的删除指令
+        for (let i = 0; i < List.length; i++) {
+          if (List[i].KeyID === id) {
+            List.splice(i, 1)
+            store.commit("deleteImage", i);
+          }
+        }
+        console.log("删除上传的文件后")
+        console.log(List)
+        console.log(JSON.stringify(store.state.file.images))
       }).on('filepredelete', function (event, key) {  //就是在删除原图片之前触发，而新选择的图片不会触发。能满足我们的要求。
-        console.log('删除前 key = ' + key);
-      }).on('filedeleted', function(event, key){
+            console.log('删除前 key = ' + key);
+      }).on('filedeleted', function (event, key) {
         console.log('删除后 key = ' + key);
         refresh_record_content(parseInt(path.split('/')[path.split('/').length - 1]));
       });
@@ -379,6 +394,48 @@ export default {
       refresh_record_content(parseInt(path.split('/')[path.split('/').length - 1]));
     }
 
+    const update_record = () => {
+      //更新后的图片列表
+      let updateImages = [];
+      for(let i = 0; i < record.value.images.length; i++){
+        updateImages.push(record.value.images[i]);
+      }
+      for(let i = 0; i < store.state.file.images.length;i++){
+        updateImages.push(store.state.file.images[i]);
+      }
+
+      $.ajax({
+        url: "http://127.0.0.1:3000/lostfound",
+        type: "put",
+        headers: {
+          authorization: "Bearer " + store.state.user.token,
+        },
+        contentType: "application/json; charset=UTF-8",
+        data: JSON.stringify({
+          id: record.value.id,
+          userId: store.state.user.id,
+          kind: recordupdate.type,
+          title: recordupdate.title,
+          about: recordupdate.description,
+          location: recordupdate.location,
+          category: recordupdate.category,
+          happenTime: recordupdate.time,
+          images: JSON.stringify(updateImages)
+        }),
+        "success": function (resp) {
+          if (resp.code === "0") {
+            close_update_record_modal();
+            refresh_record_content(parseInt(path.split('/')[path.split('/').length - 1]));
+            $('#file').fileinput('destroy');
+            Modal.getInstance('#record-content-updateModal-'+ record.value.id).hide();
+            // location.reload();
+          } else {
+            recordupdate.error_message = resp.msg;
+          }
+        }
+      });
+    }
+
     return {
       record,
       refresh_record_content,
@@ -386,6 +443,7 @@ export default {
       recordupdate,
       open_update_modal,
       close_update_record_modal,
+      update_record,
     }
   },
 

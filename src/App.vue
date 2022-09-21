@@ -15,11 +15,11 @@ import "bootstrap-fileinput/js/locales/zh"
 export default {
   components: {
     NavBar
-  },
+  }
 }
 </script>
 
 <style>
-body {
+body{
 }
 </style>

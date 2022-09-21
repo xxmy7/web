@@ -1,23 +1,22 @@
-
-
 export default {
     state: {
         images: [],
     },
-    getters: {
-    },
+    getters: {},
     mutations: {
         updateImages(state, url) {
             state.images.push(url);
         },
-        replaceImages(state,images){
+        replaceImages(state, images) {
             state.images = images;
         },
-        clearImages(state){
+        deleteImage(state, i) {
+            state.images.splice(i, 1);
+        },
+        clearImages(state) {
             state.images = [];
         }
     },
-    actions: {
-    },
+    actions: {},
     modules: {}
 }

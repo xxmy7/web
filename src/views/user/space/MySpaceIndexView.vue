@@ -57,12 +57,12 @@
               <li class="nav-item">
                 <router-link :class="route_name == 'user_space_notification' ? 'nav-link active' : ' nav-link'" :to="{name:'user_space_notification'}">通知消息</router-link>
               </li>
-              <li class="nav-item">
-                <a class="nav-link" href="#">Link</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link disabled">Disabled</a>
-              </li>
+<!--              <li class="nav-item">-->
+<!--                <a class="nav-link" href="#">Link</a>-->
+<!--              </li>-->
+<!--              <li class="nav-item">-->
+<!--                <a class="nav-link disabled">Disabled</a>-->
+<!--              </li>-->
             </ul>
           </div>
           <div class="row" style="margin-left: 20px; margin-right: 20px;">

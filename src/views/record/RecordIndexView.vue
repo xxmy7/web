@@ -142,14 +142,14 @@
                         <div class="mb-3">
                           <label class="form-label">上传图片</label>
                           <div class="file-loading">
-                            <input id="file" name="file" multiple type="file">
+                            <input id="record-add-file" name="file" multiple type="file">
                           </div>
                         </div>
                       </form>
                     </div>
                     <div class="modal-footer">
                       <div class="error-message" style="color: red;">{{ recordadd.error_message }}</div>
-                      <button type="button" class="btn btn-primary" @click="add_record">创建</button>
+                      <button type="button" class="btn btn-primary" @click="add_record">发布</button>
                       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
                               @click="close_add_record_modal()">取消
                       </button>
@@ -261,7 +261,7 @@ import {ref} from "vue";
 import {useStore} from "vuex";
 import $ from "jquery";
 import {reactive} from "vue";
-import {Modal} from "bootstrap";
+import {Modal} from 'bootstrap/dist/js/bootstrap';
 
 export default {
   components: {},
@@ -486,6 +486,8 @@ export default {
       });
     }
 
+
+
     return {
       records,
       refresh_records,
@@ -510,7 +512,7 @@ export default {
 
   mounted() {
     const store = useStore();
-    $('#file').fileinput({
+    $('#record-add-file').fileinput({
       language: 'zh',     //设置语言
       dropZoneEnabled: true,      //是否显示拖拽区域
       dropZoneTitle: "可以将图片拖放到这里",    //拖拽区域显示文字
