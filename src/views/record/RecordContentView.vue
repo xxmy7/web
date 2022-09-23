@@ -33,8 +33,9 @@
             <span style="font-size: 18px; color: #337ab7;">{{ record.userName }}</span>
           </a>
           ,&nbsp;
-          {{ record.createTime }}
-          ,&nbsp;
+          发布于: {{ record.createTime }}
+          {{ parseInt(record.status) === 1 ? '' : `, 关闭于: ` + record.dealTime }}
+          ,
           阅读&nbsp;{{ record.lookCount }}
         </div>
         <hr style="margin-top: 10px;">
@@ -72,19 +73,48 @@
           </div>
         </div>
         <hr style="border: none">
-        <button
-            v-if="Boolean(parseInt($store.state.user.id) !== parseInt(record.userId) && parseInt(record.kind) === 1 && parseInt(record.status) === 1)"
-            class="btn btn-outline-primary" style="margin-right: 20px">认领
-        </button>
-        <button
-            v-if="Boolean(parseInt(record.status) === 3 && parseInt($store.state.user.id) !== parseInt(record.userId) && parseInt(record.kind) === 1)"
-            class="btn btn-outline-primary" disabled style="margin-right: 20px">已认领
-        </button>
+        <!--        <button-->
+        <!--            v-if="Boolean(parseInt($store.state.user.id) !== parseInt(record.userId) && parseInt(record.kind) === 1 && parseInt(record.status) === 1)"-->
+        <!--            class="btn btn-outline-primary" style="margin-right: 20px">认领-->
+        <!--        </button>-->
+        <!--        <button-->
+        <!--            v-if="Boolean(parseInt(record.status) === 3 && parseInt($store.state.user.id) !== parseInt(record.userId) && parseInt(record.kind) === 1)"-->
+        <!--            class="btn btn-outline-primary" disabled style="margin-right: 20px">已认领-->
+        <!--        </button>-->
+
+        <!--        <button-->
+        <!--            v-if="Boolean(parseInt(record.status) === 1 && parseInt($store.state.user.id) === parseInt(record.userId) && parseInt(record.kind) === 1)"-->
+        <!--            class="btn btn-outline-primary" style="margin-right: 20px">确认已认领-->
+        <!--        </button>-->
 
         <button
-            v-if="Boolean(parseInt(record.status) === 1 && parseInt($store.state.user.id) === parseInt(record.userId) && parseInt(record.kind) === 1)"
-            class="btn btn-outline-primary" style="margin-right: 20px">确认已认领
+            v-if="Boolean(parseInt(record.status) === 1 && parseInt($store.state.user.id) === parseInt(record.userId))"
+            class="btn btn-outline-primary" style="margin-right: 20px"
+            data-bs-toggle="modal" :data-bs-target="'#record-content-closeModal-'+record.id">关闭
         </button>
+
+        <!-- 关闭状态的提示Modal -->
+        <div class="modal fade" :id="'record-content-closeModal-'+record.id"
+             data-bs-keyboard="false"
+             tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">关闭发布</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <label class="control-label">您确定要关闭此条发布内容吗？</label>
+                <br>
+                <label style="color: #f64646">注意：关闭后无法重新打开，请确认找到丢失物品或已找到失主。</label>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-bs-dismiss="modal">返回</button>
+                <button type="button" class="btn btn-dark" @click="close_record(record.id)">确认</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <button v-if="parseInt($store.state.user.id) === parseInt(record.userId) && parseInt(record.status) === 1"
                 type="button"
@@ -96,6 +126,7 @@
             type="button"
             class="btn btn-outline-secondary" disabled style="margin-right: 20px">修改
         </button>
+
         <!-- 发布内容Modal -->
         <div class="modal fade" :id="'record-content-updateModal-'+record.id" data-bs-backdrop="static"
              data-bs-keyboard="false" tabindex="-1">
@@ -206,7 +237,9 @@
 
     <!--    评论区-->
     <ContentField>
-      <h3 style="font-weight: normal; margin: 10px 0 30px 0;">0 评论</h3>
+      <h3 style="font-weight: normal; margin: 10px 0 30px 0;">
+        {{ comment_num }} 评论
+      </h3>
       <div class="row">
         <div class="col-1" style="text-align: center;">
           <a href="#">
@@ -214,17 +247,157 @@
           </a>
         </div>
         <div class="col-11">
-          <form class="comment_reply_form" role="form">
-            <textarea class="file-comment" name="content" cols="40" rows="2" maxlength="3000" required="" title="回复"
+            <textarea v-model="rootcommentadd" class="file-comment" name="content" cols="40" rows="2" maxlength="3000"
+                      required=""
                       placeholder="在这里写评论...（支持MarkDown和Latex语法）"></textarea>
+          <div>
+            <button class="btn btn-link" style="border-radius: 5px; float:right" @click="add_root_comment()">
+              提交评论
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!--    全部的父评论和子评论-->
+      <div v-for="comment in comments" :key="comment.id" style="padding-left: 0px;">
+        <!--    父评论-->
+        <hr style="margin: 12px 0 12px 0;">
+        <div class="row" :id="'comment-'+comment.commentId">
+          <div class="col-md-1 col-sm-2 col-xs-3" style="max-width: 60px;">
+            <a href="#">
+              <img class="img-circle" :src="comment.fromAvatar" style="width:45px">
+            </a>
+          </div>
+          <div class="col-md-11 col-sm-10 col-xs-9">
             <div>
-              <button class="btn btn-link" style="border-radius: 5px; float:right">
+              <a href="#" style="font-size: 15px;">
+                {{ comment.fromName }}
+              </a>
+              &nbsp;
+              <span class="comment-title">{{ comment.createTime }}</span>
+              &nbsp;&nbsp;
+              <a class="comment-title hand-cursor file-comment-reply" :id="`a-reply-`+ comment.commentId"
+                 data-bs-toggle="collapse"
+                 :href="'#collapseReply'+comment.commentId" @click="click_reply_a">
+                回复
+              </a>
+              <a v-if="parseInt(comment.fromId) === parseInt($store.state.user.id)"
+                 class="comment-title hand-cursor file-comment-reply" data-bs-toggle="modal"
+                 :data-bs-target="'#root-comment-deleteModal-'+comment.id">
+                <i class="bi bi-trash" style="float: right"></i>
+              </a>
+            </div>
+            <div class="comment-content">
+              {{ comment.content }}
+            </div>
+            <div class="collapse" :id="'collapseReply'+comment.commentId">
+                <textarea v-model="comment.textarea" class="file-comment" name="content" cols="40" rows="2"
+                          maxlength="3000" required="" title="回复"
+                          placeholder="在这里写评论...（支持MarkDown和Latex语法）"></textarea>
+              <button class="btn btn-link" style="border-radius: 5px;float: right"
+                      @click="add_son_comment(comment.textarea,comment.id,comment.commentId,comment.fromId,comment.fromName,comment.fromAvatar)">
                 提交评论
               </button>
             </div>
-          </form>
+            <!-- 删除评论的提示Modal -->
+            <div class="modal fade" :id="'root-comment-deleteModal-'+comment.id" data-bs-backdrop="static"
+                 data-bs-keyboard="false"
+                 tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">删除评论</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <label class="control-label">您确定要删除此条评论吗？</label>
+                    <br>
+                    <label style="color: #f64646">注意：删除后无法找回</label>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">返回</button>
+                    <button type="button" class="btn btn-danger" @click="delete_root_comment(comment.id)">确认</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
+        <!--        子评论-->
+        <div v-for="reply in comment.listCommentsReply" :key="reply.id"
+             style="padding-left: 50px; margin: 10px 0 10px 0">
+          <div class="row" :id="'comment-'+reply.commentId">
+            <div class="col-md-1 col-sm-2 col-xs-3" style="max-width: 40px">
+              <a href="#">
+                <img class="img-circle" :src="reply.fromAvatar" style="width:30px">
+              </a>
+            </div>
+            <div class="col-md-11 col-sm-10 col-xs-9" style="padding-right: 0;">
+              <div>
+                <a href="#" style="font-size: 15px;">
+                  {{ reply.fromName }}
+                </a>
+                &nbsp;
+                <span class="comment-title">{{ reply.createTime }}</span>
+                <span class="comment-title" v-if="reply.toCommentId !== comment.commentId">
+                  &nbsp;&nbsp;&nbsp;回复了
+                  <a style="cursor:pointer; color: #337ab7;" @click="click_comment_a(reply.toCommentId)">
+                      {{ reply.toName }} 的评论
+                  </a>
+                </span>
+                &nbsp;&nbsp;
+                <a class="comment-title hand-cursor file-comment-reply" :id="`a-reply-`+reply.commentId"
+                   data-bs-toggle="collapse"
+                   :href="'#collapseReply'+reply.commentId" @click="click_reply_a">
+                  回复
+                </a>
+                <a v-if="parseInt(reply.fromId) === parseInt($store.state.user.id)"
+                   class="comment-title hand-cursor file-comment-reply" data-bs-toggle="modal"
+                   :data-bs-target="'#son-comment-deleteModal-'+reply.id">
+                  <i class="bi bi-trash" style="float: right;text-align: right"></i>
+                </a>
+              </div>
+              <div class="comment-content">
+                {{ reply.content }}
+              </div>
+              <div class="collapse" :id="'collapseReply'+reply.commentId">
+                <textarea v-model="reply.textarea" class="file-comment" name="content" cols="40" rows="2"
+                          maxlength="3000" required=""
+                          placeholder="在这里写评论...（支持MarkDown和Latex语法）"></textarea>
+                <button class="btn btn-link" style="border-radius: 5px;float:right;"
+                        @click="add_son_comment(reply.textarea,comment.id,reply.commentId,reply.fromId,reply.fromName,reply.fromAvatar)">
+                  提交评论
+                </button>
+              </div>
+
+              <!-- 删除评论的提示Modal -->
+              <div class="modal fade" :id="'son-comment-deleteModal-'+reply.id" data-bs-backdrop="static"
+                   data-bs-keyboard="false"
+                   tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">删除评论</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <label class="control-label">您确定要删除此条评论吗？</label>
+                      <br>
+                      <label style="color: #f64646">注意：删除后无法找回</label>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-default" data-bs-dismiss="modal">返回</button>
+                      <button type="button" class="btn btn-danger"
+                              @click="delete_son_comment(reply.id, reply.commentId)">确认
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </ContentField>
   </div>
@@ -236,9 +409,10 @@ import $ from "jquery";
 import {useStore} from "vuex";
 import {reactive, ref} from "vue";
 import {useRoute} from "vue-router";
-import {Modal} from 'bootstrap/dist/js/bootstrap';
+import {Modal, Collapse} from 'bootstrap/dist/js/bootstrap';
 import router from '@/router';
-
+import 'jquery-ui-dist/jquery-ui'
+import 'jquery-ui-dist/jquery-ui.min.css'
 
 export default {
   components: {
@@ -252,6 +426,12 @@ export default {
 
     const route = useRoute();
     const path = route.path;
+
+    let comments = ref([]);
+    let comment_num = ref(0);
+    const recordId = parseInt(path.split('/')[path.split('/').length - 1]);
+    let rootcommentadd = ref('');
+    let soncommentadd = ref([]);
 
     const recordupdate = reactive({
       type: 0,
@@ -281,8 +461,29 @@ export default {
       })
     }
 
+    const refresh_record_comments = recordId => {
+      $.ajax({
+        url: `http://127.0.0.1:3000/comments/getList/${recordId}`,
+        type: "get",
+        headers: {
+          Authorization: "Bearer " + store.state.user.token,
+        },
+        success(resp) {
+          comment_num.value = 0;
+          comments.value = resp.data;
+          for (let i = 0; i < resp.data.length; i++) {
+            comment_num.value = comment_num.value + 1 + resp.data[i].listCommentsReply.length
+          }
+          console.log(resp);
+        },
+        error(resp) {
+          console.log(resp);
+        }
+      })
+    }
 
-    refresh_record_content(parseInt(path.split('/')[path.split('/').length - 1]));
+    refresh_record_content(recordId);
+    refresh_record_comments(recordId);
 
     const deleteRecord = (id) => {
       //实际是更新状态为删除
@@ -366,7 +567,7 @@ export default {
         },
       }).on("fileuploaded", function (event, data, previewId) { //异步上传成功后回调
         let url = data.response.data;
-        List.push({ FileName: url, KeyID: previewId })
+        List.push({FileName: url, KeyID: previewId})
         store.commit("updateImages", url);
         console.log(store.state.file.images);
         console.log(JSON.stringify(store.state.file.images));
@@ -382,7 +583,7 @@ export default {
         console.log(List)
         console.log(JSON.stringify(store.state.file.images))
       }).on('filepredelete', function (event, key) {  //就是在删除原图片之前触发，而新选择的图片不会触发。能满足我们的要求。
-            console.log('删除前 key = ' + key);
+        console.log('删除前 key = ' + key);
       }).on('filedeleted', function (event, key) {
         console.log('删除后 key = ' + key);
         refresh_record_content(parseInt(path.split('/')[path.split('/').length - 1]));
@@ -397,10 +598,10 @@ export default {
     const update_record = () => {
       //更新后的图片列表
       let updateImages = [];
-      for(let i = 0; i < record.value.images.length; i++){
+      for (let i = 0; i < record.value.images.length; i++) {
         updateImages.push(record.value.images[i]);
       }
-      for(let i = 0; i < store.state.file.images.length;i++){
+      for (let i = 0; i < store.state.file.images.length; i++) {
         updateImages.push(store.state.file.images[i]);
       }
 
@@ -427,7 +628,7 @@ export default {
             close_update_record_modal();
             refresh_record_content(parseInt(path.split('/')[path.split('/').length - 1]));
             $('#file').fileinput('destroy');
-            Modal.getInstance('#record-content-updateModal-'+ record.value.id).hide();
+            Modal.getInstance('#record-content-updateModal-' + record.value.id).hide();
             // location.reload();
           } else {
             recordupdate.error_message = resp.msg;
@@ -436,14 +637,170 @@ export default {
       });
     }
 
+    const close_record = (recordId) => {
+      $.ajax({
+        url: "http://127.0.0.1:3000/lostfound/closeRecord",
+        type: "put",
+        headers: {
+          authorization: "Bearer " + store.state.user.token,
+        },
+        contentType: "application/json; charset=UTF-8",
+        data: JSON.stringify({
+          "id": recordId,
+          "status": 3,
+        }),
+        "success": function (resp) {
+          if (resp.code === "0") {
+            refresh_record_content(recordId);
+            Modal.getInstance('#record-content-closeModal-'+recordId).hide();
+          }
+        },
+        "error": function (resp) {
+          console.log(resp);
+        }
+      });
+    }
+
+    const click_reply_a = (e) => {
+      if (e.target.innerText === "回复") {
+        e.target.innerText = "收起"
+      } else {
+        e.target.innerText = "回复"
+      }
+    }
+
+    const close_collapse = (id) => {
+      Collapse.getInstance(id).hide()
+    }
+
+    const add_root_comment = () => {
+      $.ajax({
+        url: `http://127.0.0.1:3000/comments/addRootComments`,
+        type: "post",
+        headers: {
+          Authorization: "Bearer " + store.state.user.token,
+        },
+        data: JSON.stringify({
+          "recordId": record.value.id,
+          "fromId": store.state.user.id,
+          "fromName": store.state.user.username,
+          "fromAvatar": store.state.user.photo,
+          "content": rootcommentadd.value
+        }),
+        contentType: "application/json; charset=UTF-8",
+        dataType: 'json',
+        success(resp) {
+          console.log("添加root评论成功");
+          rootcommentadd.value = '';
+          refresh_record_comments(recordId);
+          console.log(resp);
+        },
+        error(resp) {
+          console.log(resp);
+        }
+      })
+    }
+
+    const delete_root_comment = (id) => {
+      $.ajax({
+        url: `http://127.0.0.1:3000/comments/deleteRootComment/${id}`,
+        type: "delete",
+        headers: {
+          Authorization: "Bearer " + store.state.user.token,
+        },
+        success() {
+          console.log("删除root评论成功");
+          refresh_record_comments(recordId);
+          Modal.getInstance('#root-comment-deleteModal-' + id).hide();
+        },
+        error(resp) {
+          console.log(resp);
+        }
+      })
+    }
+
+    const delete_son_comment = (id, commentId) => {
+      $.ajax({
+        url: `http://127.0.0.1:3000/comments/deleteSonComment/${commentId}`,
+        type: "delete",
+        headers: {
+          Authorization: "Bearer " + store.state.user.token,
+        },
+        success() {
+          console.log("删除son评论成功");
+          refresh_record_comments(recordId);
+          Modal.getInstance('#son-comment-deleteModal-' + id).hide();
+        },
+        error(resp) {
+          console.log(resp);
+        }
+      })
+    }
+
+    const add_son_comment = (text, rootId, toCommentId, toId, toName, toAvatar) => {
+      console.log("子评论内容")
+      console.log(text)
+      $.ajax({
+        url: `http://127.0.0.1:3000/comments/addSonComments`,
+        type: "post",
+        headers: {
+          Authorization: "Bearer " + store.state.user.token,
+        },
+        data: JSON.stringify({
+          "rootId": rootId,
+          "toCommentId": toCommentId,
+          "fromId": store.state.user.id,
+          "fromName": store.state.user.username,
+          "fromAvatar": store.state.user.photo,
+          "toId": toId,
+          "toName": toName,
+          "toAvatar": toAvatar,
+          "content": text
+        }),
+        contentType: "application/json; charset=UTF-8",
+        dataType: 'json',
+        success(resp) {
+          console.log("添加son评论成功");
+          rootcommentadd.value = '';
+          refresh_record_comments(recordId);
+          $('#a-reply-' + toCommentId)[0].innerText = "回复"
+          close_collapse('#collapseReply' + toCommentId)
+          console.log(resp);
+        },
+        error(resp) {
+          console.log(resp);
+        }
+      })
+    }
+
+    // 点击回复了谁的评论，进行闪烁提示
+    const click_comment_a = (commentId) => {
+      console.log("动了吗")
+      console.log(commentId)
+      $('#comment-' + commentId).effect('pulsate', "slow");
+    }
+
     return {
       record,
       refresh_record_content,
+      refresh_record_comments,
       deleteRecord,
       recordupdate,
       open_update_modal,
       close_update_record_modal,
       update_record,
+      close_record,
+      comments,
+      click_reply_a,
+      close_collapse,
+      rootcommentadd,
+      add_root_comment,
+      delete_root_comment,
+      delete_son_comment,
+      soncommentadd,
+      add_son_comment,
+      click_comment_a,
+      comment_num,
     }
   },
 
@@ -499,6 +856,7 @@ img {
 
 a {
   text-decoration: none;
+  color: #337ab7;
 }
 
 .gray {
@@ -519,4 +877,26 @@ a {
   vertical-align: baseline;
 }
 
+.comment-title {
+  color: #999999;
+  font-size: 13px;
+}
+
+.file-comment-reply {
+  color: #95a5a6;
+  cursor: pointer;
+}
+
+a.hand-cursor:hover {
+  cursor: pointer;
+}
+
+.file-comment-reply:hover {
+  color: #2AABD2;
+  text-decoration: none;
+}
+
+.comment-content {
+  padding-bottom: 5px;
+}
 </style>

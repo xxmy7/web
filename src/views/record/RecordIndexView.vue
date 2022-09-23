@@ -191,6 +191,7 @@
           <div style="padding-left: 5px;">
             <router-link to="" class="card-username">{{ record.userName }}</router-link>
             <p class="card-time">发布于: {{ record.createTime }}</p>
+            <p class="card-time" v-if="parseInt(record.status) === 3">结束于: {{ record.dealTime }}</p>
             <p class="card-time">浏览量：{{ record.lookCount }}</p>
           </div>
         </div>
