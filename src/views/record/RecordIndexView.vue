@@ -117,7 +117,8 @@
                         </div>
                         <div class="mb-3">
                           <label class="form-label">物品类别</label>
-                          <select v-model="recordadd.categoryType" class="form-select" aria-label="Default select example">
+                          <select v-model="recordadd.categoryType" class="form-select"
+                                  aria-label="Default select example">
                             <option value="" disabled>请选择物品类别</option>
                             <option value="1">卡片证件</option>
                             <option value="2">书籍文具</option>
@@ -138,6 +139,16 @@
                           <label v-else for="add-record-location" class="form-label">找到地点</label>
                           <input v-model="recordadd.location" type="text" class="form-control" id="add-record-location"
                                  placeholder="请输入地点">
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label">经纬度</label>
+                          <div class="input-group">
+                            <input v-model="recordadd.longitude" type="text" placeholder="请输入经度" class="form-control">
+                            <input v-model="recordadd.latitude" type="text" placeholder="请输入纬度" class="form-control">
+                            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
+                                    data-bs-target="#select-location" @click="open_select_location_modal()">点击选取经纬度
+                            </button>
+                          </div>
                         </div>
                         <div class="mb-3">
                           <label v-if="recordadd.type==='lost'" for="add-record-time" class="form-label">丢失时间</label>
@@ -169,6 +180,33 @@
                   </div>
                 </div>
               </div>
+
+
+              <!-- 选取经纬度Modal -->
+              <div class="modal fade" id="select-location" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">选取经纬度</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="mb-3 map-container" style="width:100%; height: 500px">
+                        <div id="first-map" style="height: 500px; width: 100%;"></div>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <div class="error-message" style="color: red;">经度：{{ recordadd.longitude }}</div>
+                      <div class="error-message" style="color: red;">纬度：{{ recordadd.latitude }}</div>
+                      <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+                              @click="save_select_location()">确定
+                      </button>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -176,6 +214,7 @@
 
       </div>
     </div>
+
 
     <div v-for="record in records" :key="record.id" class="shadow-sm card mx-auto border-gray"
          style="width: 50vw; margin-bottom: 4vh">
@@ -243,8 +282,7 @@
     </div>
 
 
-
-<!--    返回最上面链接-->
+    <!--    返回最上面链接-->
     <a href="#top" class="back-to-top" style="position:fixed;right:2vw;bottom:2vh;">
       <i class="bi bi-arrow-bar-up" style="font-size: 5vh"></i>
     </a>
@@ -276,13 +314,15 @@ import {useStore} from "vuex";
 import $ from "jquery";
 import {reactive} from "vue";
 import {Modal} from 'bootstrap/dist/js/bootstrap';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import mapboxgl from 'mapbox-gl';
 
 export default {
   components: {},
 
   setup() {
     const store = useStore();
-    let categoryTypeArray= ref(['卡片证件','书籍文具','衣服鞋子','电子设备','各类钥匙','其他分类'])
+    let categoryTypeArray = ref(['卡片证件', '书籍文具', '衣服鞋子', '电子设备', '各类钥匙', '其他分类'])
     let records = ref([]);
     let current_page = 1;
     let total_records = 0;
@@ -298,10 +338,12 @@ export default {
     const recordadd = reactive({
       type: "lost",
       title: "",
-      categoryType:"",
+      categoryType: "",
       category: "",
       time: "",
       location: "",
+      longitude: "",  //经度
+      latitude: "",   //纬度
       description: "",
       error_message: "",
     });
@@ -479,6 +521,8 @@ export default {
           title: recordadd.title,
           about: recordadd.description,
           location: recordadd.location,
+          longitude: recordadd.longitude,
+          latitude: recordadd.latitude,
           type: recordadd.categoryType,
           category: recordadd.category,
           happenTime: recordadd.time,
@@ -488,10 +532,12 @@ export default {
           if (resp.code === "0") {
             recordadd.type = "lost";
             recordadd.title = "";
-            recordadd.categoryType="";
+            recordadd.categoryType = "";
             recordadd.category = "";
             recordadd.time = "";
             recordadd.location = "";
+            recordadd.longitude = "";
+            recordadd.latitude = "";
             recordadd.description = "";
             recordadd.error_message = "";
             close_add_record_modal();
@@ -504,7 +550,64 @@ export default {
       });
     }
 
+    const save_select_location = () => {
+      Modal.getInstance("#add-record").show();
+    }
 
+    let currentMarkers = [];
+
+    const initmap = () => {
+      console.log("为什么没有")
+      mapboxgl.accessToken = 'pk.eyJ1IjoiZ3Vvenp6IiwiYSI6ImNsODN5ODM4ZzA1eXozeHIxdGliY3F2YWsifQ.t2knE0hwgpPP7X8Z4MeKBQ'; //这里请换成自己的token
+      const mapApp = new mapboxgl.Map({
+        container: 'first-map', // container id 绑定的组件的id
+        style: 'mapbox://styles/mapbox/streets-v11', //地图样式，可以使用官网预定义的样式,也可以自定义
+        center: [114.357902, 30.537348], // 初始坐标系，这个是南京建邺附近
+        zoom: 14,     // starting zoom 地图初始的拉伸比例
+        // pitch: 60,  //地图的角度，不写默认是0，取值是0-60度，一般在3D中使用
+        bearing: 17.6, //地图的初始方向，值是北的逆时针度数，默认是0，即是正北
+        antialias: false, //抗锯齿，通过false关闭提升性能
+      });
+
+      mapApp.on('click', function (e) {
+        if (currentMarkers !== null) {
+          for (let i = currentMarkers.length - 1; i >= 0; i--) {
+            currentMarkers[i].remove();
+          }
+        }
+        let lng = e.lngLat.lng;
+        let lat = e.lngLat.lat;
+        recordadd.longitude = lng;
+        recordadd.latitude = lat;
+        let marker1 = new mapboxgl.Marker()
+            .setLngLat([lng, lat])
+            .addTo(mapApp);
+        currentMarkers.push(marker1);
+      });
+
+      //鼠标样式
+      mapApp.getCanvas().style.cursor = 'crosshair';
+
+      // 去除logo
+      let controls = mapApp._controls;
+      controls.forEach(control => {
+        // 去除logo控件
+        if ('_updateLogo' in control) {
+          mapApp.removeControl(control)
+        }
+
+        // 去除attribute控件
+        if ('_attribHTML' in control) {
+          mapApp.removeControl(control)
+        }
+      })
+    }
+
+    const open_select_location_modal = () => {
+
+      // mapbox地图初始化
+      initmap();
+    }
 
     return {
       records,
@@ -526,10 +629,14 @@ export default {
       close_add_record_modal,
       recordadd,
       add_record,
+      save_select_location,
+      open_select_location_modal,
     }
   },
 
   mounted() {
+
+    //图片上传的
     const store = useStore();
     $('#record-add-file').fileinput({
       language: 'zh',     //设置语言
@@ -723,4 +830,9 @@ p.card-text {
   font-size: 20px;
   color: #656768;
 }
+
+.mapboxgl-ctrl-bottom-left div {
+  display: none !important;
+}
+
 </style>

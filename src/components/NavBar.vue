@@ -6,12 +6,17 @@
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
             <router-link :class="route_name == 'record_index' ? 'nav-link active' : ' nav-link'"
-                         :to="{ name: 'record_index' }">所有启事
+                         :to="{ name: 'record_index' }">寻东问西
             </router-link>
           </li>
           <li class="nav-item">
             <router-link :class="route_name == 'map_index' ? 'nav-link active' : ' nav-link'"
-                         :to="{ name: 'map_index' }">地图相关
+                         :to="{ name: 'map_index' }">事件地图
+            </router-link>
+          </li>
+          <li class="nav-item">
+            <router-link :class="route_name == 'announcement_index' ? 'nav-link active' : ' nav-link'"
+                         :to="{ name: 'announcement_index' }">通知公告
             </router-link>
           </li>
         </ul>

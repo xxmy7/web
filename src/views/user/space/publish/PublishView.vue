@@ -5,7 +5,7 @@
       <tr>
         <th scope="col">类别</th>
         <th scope="col">标题</th>
-        <th scope="col">物品</th>
+<!--        <th scope="col">物品</th>-->
         <th scope="col">地点</th>
         <th scope="col">发布时间</th>
         <th scope="col">操作</th>
@@ -17,7 +17,7 @@
           {{ parseInt(record.kind) === 0 ? "寻物启事" : "失物招领" }}
         </td>
         <td>{{ record.title }}</td>
-        <td>{{ record.category }}</td>
+<!--        <td>{{ record.category }}</td>-->
         <td>{{ record.location }}</td>
         <td>{{ record.createTime }}</td>
         <td>

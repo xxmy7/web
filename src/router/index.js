@@ -11,7 +11,7 @@ import InfoIndexView from "@/views/user/info/InfoIndexView";
 import MySpaceIndexView from "@/views/user/space/MySpaceIndexView";
 import PublishView from "@/views/user/space/publish/PublishView";
 import NotificationView from "@/views/user/space/notification/NotificationView";
-
+import AnnouncementIndexView from '@/views/announcement/AnnouncementIndexView';
 const routes = [
   {
     path: "/",
@@ -33,6 +33,14 @@ const routes = [
     path: "/map",
     name: "map_index",
     component: MapIndexView,
+    meta: {
+      requestAuth: true,
+    }
+  },
+  {
+    path: "/announcement",
+    name: "announcement_index",
+    component: AnnouncementIndexView,
     meta: {
       requestAuth: true,
     }
