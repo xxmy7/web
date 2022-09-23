@@ -116,6 +116,18 @@
                                  placeholder="请输入标题">
                         </div>
                         <div class="mb-3">
+                          <label class="form-label">物品类别</label>
+                          <select v-model="recordadd.categoryType" class="form-select" aria-label="Default select example">
+                            <option value="" disabled>请选择物品类别</option>
+                            <option value="1">卡片证件</option>
+                            <option value="2">书籍文具</option>
+                            <option value="3">衣服鞋子</option>
+                            <option value="4">电子设备</option>
+                            <option value="5">各类钥匙</option>
+                            <option value="6">其他分类</option>
+                          </select>
+                        </div>
+                        <div class="mb-3">
                           <label for="add-record-category" class="form-label">物品</label>
                           <input v-model="recordadd.category" type="text" class="form-control" id="add-record-category"
                                  placeholder="请输入物品名称">
@@ -215,6 +227,7 @@
               <span class="btn btn-info activity_status disabled">已完成</span>
               <span class="deal-time"> 结束时间：{{ record.dealTime }}</span>
             </div>
+            <p class="card-text ">物品类别：{{ categoryTypeArray[record.type - 1] }}</p>
             <p class="card-text ">物品：{{ record.category }}</p>
             <p class="card-text ">地点：{{ record.location }}</p>
             <p class="card-text ">{{ parseInt(record.kind) === 0 ? "丢失时间: " : "找到时间: " }}{{ record.happenTime }}</p>
@@ -269,6 +282,7 @@ export default {
 
   setup() {
     const store = useStore();
+    let categoryTypeArray= ref(['卡片证件','书籍文具','衣服鞋子','电子设备','各类钥匙','其他分类'])
     let records = ref([]);
     let current_page = 1;
     let total_records = 0;
@@ -284,6 +298,7 @@ export default {
     const recordadd = reactive({
       type: "lost",
       title: "",
+      categoryType:"",
       category: "",
       time: "",
       location: "",
@@ -464,6 +479,7 @@ export default {
           title: recordadd.title,
           about: recordadd.description,
           location: recordadd.location,
+          type: recordadd.categoryType,
           category: recordadd.category,
           happenTime: recordadd.time,
           images: JSON.stringify(store.state.file.images)
@@ -472,6 +488,7 @@ export default {
           if (resp.code === "0") {
             recordadd.type = "lost";
             recordadd.title = "";
+            recordadd.categoryType="";
             recordadd.category = "";
             recordadd.time = "";
             recordadd.location = "";
@@ -491,6 +508,7 @@ export default {
 
     return {
       records,
+      categoryTypeArray,
       refresh_records,
       pages,
       click_page,

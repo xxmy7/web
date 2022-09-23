@@ -16,6 +16,7 @@
     "element-plus": "^2.2.16",
     "jquery": "^3.6.1",
     "jquery-ui-dist": "^1.13.2",
+    "mapbox-gl": "^2.10.0",
     "vue": "^3.2.13",
     "vue-router": "^4.0.3",
     "vuex": "^4.0.0"

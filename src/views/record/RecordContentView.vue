@@ -48,6 +48,10 @@
         </div>
         <hr>
         <p class="card-text ">
+          <span style="color: #999999; font-weight: 700;">物品类别:  </span>
+          {{ categoryTypeArray[parseInt(record.type) -1]}}
+        </p>
+        <p class="card-text ">
           <span style="color: #999999; font-weight: 700;">{{ parseInt(record.kind) === 0 ? "丢失物品: " : "物品: " }}</span>
           {{ record.category }}
         </p>
@@ -127,7 +131,7 @@
             class="btn btn-outline-secondary" disabled style="margin-right: 20px">修改
         </button>
 
-        <!-- 发布内容Modal -->
+        <!-- 发布内容修改的Modal -->
         <div class="modal fade" :id="'record-content-updateModal-'+record.id" data-bs-backdrop="static"
              data-bs-keyboard="false" tabindex="-1">
           <div class="modal-dialog modal-lg">
@@ -160,6 +164,18 @@
                     <label for="add-record-title" class="form-label">标题</label>
                     <input v-model="recordupdate.title" type="text" class="form-control" id="add-record-title"
                            placeholder="请输入标题">
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">物品类别</label>
+                    <select v-model="recordupdate.categoryType" class="form-select" aria-label="Default select example">
+                      <option value="" disabled>请选择物品类别</option>
+                      <option value="1">卡片证件</option>
+                      <option value="2">书籍文具</option>
+                      <option value="3">衣服鞋子</option>
+                      <option value="4">电子设备</option>
+                      <option value="5">各类钥匙</option>
+                      <option value="6">其他分类</option>
+                    </select>
                   </div>
                   <div class="mb-3">
                     <label for="add-record-category" class="form-label">物品</label>
@@ -423,6 +439,7 @@ export default {
   setup() {
     const store = useStore();
     let record = ref('');
+    let categoryTypeArray= ref(['卡片证件','书籍文具','衣服鞋子','电子设备','各类钥匙','其他分类'])
 
     const route = useRoute();
     const path = route.path;
@@ -436,6 +453,7 @@ export default {
     const recordupdate = reactive({
       type: 0,
       title: "",
+      categoryType:"",
       category: "",
       time: "",
       location: "",
@@ -516,6 +534,7 @@ export default {
       // 属性的重新刷新
       recordupdate.type = record.value.kind;
       recordupdate.title = record.value.title;
+      recordupdate.categoryType = record.value.type;
       recordupdate.category = record.value.category;
       recordupdate.time = record.value.happenTime;
       recordupdate.location = record.value.location;
@@ -619,6 +638,7 @@ export default {
           title: recordupdate.title,
           about: recordupdate.description,
           location: recordupdate.location,
+          type: recordupdate.categoryType,
           category: recordupdate.category,
           happenTime: recordupdate.time,
           images: JSON.stringify(updateImages)
@@ -782,6 +802,7 @@ export default {
 
     return {
       record,
+      categoryTypeArray,
       refresh_record_content,
       refresh_record_comments,
       deleteRecord,
